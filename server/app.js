@@ -42,13 +42,10 @@ app.post('/send', (request, response) => {
   const params = [request.body.send_year, request.body.send_month, request.body.send_day, request.body.email_address, request.body.code_content];
   connection.query(query, params, (error, result) => {
     if (error) throw error;
-    
-    response.send({
-      ok: true,
-    });
-    
-    let date = new Date(parseInt(request.body.send_year), parseInt(request.body.send_month) + 1, parseInt(request.body.send_day), 0, 0, 0);
-    
+    // set date for when to send the email
+    let date = new Date(parseInt(request.body.send_year), parseInt(request.body.send_month) - 1, parseInt(request.body.send_day), 0, 0, 0);
+    console.log("server date:" + date);
+    // schedule the job to send the email
     schedule.scheduleJob(date, function(){
       let mailOptions = {
         from: 'code.time.capsule@gmail.com',
@@ -56,14 +53,20 @@ app.post('/send', (request, response) => {
         subject: 'Look at how much your coding skills have grown! (From Code Time Capsule)',
         text: String(request.body.code_content)
       };
-
+      // send the email
       transporter.sendMail(mailOptions, function(error, info){
         if (error) {
           console.log(error);
         } else {
           console.log('Email sent: ' + info.response);
         }
+	transporter.close();
       });   
+    });
+    response.send({
+      ok: true,
+      id: result.insertId,
+      date: date,
     });
   });
 });
