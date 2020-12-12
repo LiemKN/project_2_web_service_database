@@ -16,27 +16,6 @@ connection.connect();
 let gmail_cred = JSON.parse(fs.readFileSync('gmail_credentials.json', 'utf8'));
 const transporter = nodemailer.createTransport(gmail_cred);
 
-function rowToObject(row) {
-  return {
-    send_year: row.send_year,
-    send_month: row.send_month,
-    send_day: row.send_day,
-    email_address: row.email_address,
-    code_content: row.code_content,
-  };
-}
-
-app.get('/emailform/:id', (request, response) => {
-  const query = 'SELECT id, send_year, send_month, send_day, email_address, code_content FROM emailform WHERE id = ?';
-  const params = [request.params.id];
-  connection.query(query, params, (error, rows) => {
-    response.send({
-      ok: true,
-      email: rows.map(rowToObject),
-    });
-  });
-});
-
 app.post('/send', (request, response) => {
   const query = 'INSERT INTO emailform(send_year, send_month, send_day, email_address, code_content) VALUES (?, ?, ?, ?, ?)';
   const params = [request.body.send_year, request.body.send_month, request.body.send_day, request.body.email_address, request.body.code_content];
@@ -58,7 +37,7 @@ app.post('/send', (request, response) => {
         if (error) {
           console.log(error);
         } else {
-          console.log('Email sent: ' + info.response);
+          console.log('Email sent on: ' + date  + info.response);
         }
 	transporter.close();
       });   
